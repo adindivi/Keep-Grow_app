@@ -1,0 +1,6 @@
+{
+  "name": "Keep & Grow",
+  "description": "Smart investment assistant helping users select palettes, screen 24 high-growth stocks, execute AI diagnostic analyses, and customize stock portfolios.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
