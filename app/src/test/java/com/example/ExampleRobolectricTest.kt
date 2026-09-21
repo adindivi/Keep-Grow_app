@@ -25,6 +25,6 @@ class ExampleRobolectricTest {
   fun `application context is available and has valid package name`() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     assertNotNull(context)
-    assertEquals("com.aistudio.keepandgrow.vbglt", context.packageName)
+    assertEquals("com.keepandgrow.kyh", context.packageName)
   }
 }

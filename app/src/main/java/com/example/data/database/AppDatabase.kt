@@ -121,7 +121,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "keep_grow_database"
                 )
-                  .fallbackToDestructiveMigration()
+                  .fallbackToDestructiveMigration(dropAllTables = true)
                   .build()
                 INSTANCE = instance
                 instance

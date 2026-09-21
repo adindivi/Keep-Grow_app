@@ -5,12 +5,12 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class QuoteResponse(
-    @Json(name = "c") val currentPrice: Double? = null,
-    @Json(name = "d") val change: Double? = null,
-    @Json(name = "dp") val percentChange: Double? = null,
-    @Json(name = "h") val highPrice: Double? = null,
-    @Json(name = "l") val lowPrice: Double? = null,
-    @Json(name = "o") val openPrice: Double? = null,
-    @Json(name = "pc") val previousClosePrice: Double? = null,
-    @Json(name = "t") val timestamp: Long? = null
+    @field:Json(name = "c") val currentPrice: Double? = null,
+    @field:Json(name = "d") val change: Double? = null,
+    @field:Json(name = "dp") val percentChange: Double? = null,
+    @field:Json(name = "h") val highPrice: Double? = null,
+    @field:Json(name = "l") val lowPrice: Double? = null,
+    @field:Json(name = "o") val openPrice: Double? = null,
+    @field:Json(name = "pc") val previousClosePrice: Double? = null,
+    @field:Json(name = "t") val timestamp: Long? = null
 )

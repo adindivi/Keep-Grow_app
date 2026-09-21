@@ -3,7 +3,7 @@ package com.example
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.example.network.models.QuoteResponse
-import com.example.ui.screens.StockItemCard
+import com.example.ui.screens.FintechStockItemCard
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.viewmodel.HighGrowthStock
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
@@ -35,7 +35,7 @@ class GreetingScreenshotTest {
 
     composeTestRule.setContent {
       MyApplicationTheme {
-        StockItemCard(stock = sampleStock)
+        FintechStockItemCard(stock = sampleStock)
       }
     }
 

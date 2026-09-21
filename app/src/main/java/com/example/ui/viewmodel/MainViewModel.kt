@@ -22,6 +22,7 @@ import java.text.DecimalFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.Request
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.json.JSONObject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -152,7 +153,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     ) {
                         okHttpClient.newCall(request).execute().use { response ->
                             if (!response.isSuccessful) {
-                                throw retrofit2.HttpException(retrofit2.Response.error<Any>(response.code, okhttp3.ResponseBody.create(null, "")))
+                                throw retrofit2.HttpException(retrofit2.Response.error<Any>(response.code, "".toResponseBody(null)))
                             }
                             val body = response.body?.string() ?: ""
                             val json = JSONObject(body)
@@ -548,12 +549,34 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun calculateMonthlyUpProbability(closeList: List<Double>, months: Int): Double {
-        return FinanceCalculator.calculateMonthlyUpProbability(closeList, months)
+    private data class StockMetrics(
+        val upProb3M: Double,
+        val upProb6M: Double,
+        val upProb12M: Double,
+        val return3M: Double,
+        val return6M: Double,
+        val return12M: Double,
+        val dailyReturnsCsv: String
+    )
+
+    private fun computeStockMetrics(closeList: List<Double>): StockMetrics {
+        return StockMetrics(
+            upProb3M = FinanceCalculator.calculateMonthlyUpProbability(closeList, 3),
+            upProb6M = FinanceCalculator.calculateMonthlyUpProbability(closeList, 6),
+            upProb12M = FinanceCalculator.calculateMonthlyUpProbability(closeList, 12),
+            return3M = FinanceCalculator.calculatePeriodReturn(closeList, 3),
+            return6M = FinanceCalculator.calculatePeriodReturn(closeList, 6),
+            return12M = FinanceCalculator.calculatePeriodReturn(closeList, 12),
+            dailyReturnsCsv = FinanceCalculator.calculateDailyReturnsCsv(closeList, 30)
+        )
     }
 
-    private fun calculatePeriodReturn(closeList: List<Double>, months: Int): Double {
-        return FinanceCalculator.calculatePeriodReturn(closeList, months)
+    fun toYahooTicker(ticker: String): String {
+        return if (ticker.all { it.isDigit() }) {
+            if (ticker == "247540" || ticker == "086520") "$ticker.KQ" else "$ticker.KS"
+        } else {
+            ticker
+        }
     }
 
     private suspend fun fetchQuoteFromFinnhub(ticker: String): JSONObject? = withContext(Dispatchers.IO) {
@@ -651,30 +674,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             0.0
                         }
                         
-                        val upProb3M = calculateMonthlyUpProbability(closeList, 3)
-                        val upProb6M = calculateMonthlyUpProbability(closeList, 6)
-                        val upProb12M = calculateMonthlyUpProbability(closeList, 12)
-                        
-                        val return3M = calculatePeriodReturn(closeList, 3)
-                        val return6M = calculatePeriodReturn(closeList, 6)
-                        val return12M = calculatePeriodReturn(closeList, 12)
-                        
-                        val dailyReturns = mutableListOf<Double>()
-                        if (closeList.size >= 2) {
-                            val startIdx = Math.max(0, closeList.size - 31)
-                            for (i in startIdx + 1 until closeList.size) {
-                                val todayClose = closeList[i]
-                                val prevCloseVal = closeList[i - 1]
-                                if (prevCloseVal > 0) {
-                                    dailyReturns.add(((todayClose - prevCloseVal) / prevCloseVal) * 100.0)
-                                }
-                            }
-                        }
-                        while (dailyReturns.size < 30) {
-                            dailyReturns.add(0, 0.0)
-                        }
-                        val dailyReturnsCsv = dailyReturns.takeLast(30).joinToString(",") { String.format("%.2f", it) }
-                        
+                        val metrics = computeStockMetrics(closeList)
                         val displayTicker = yahooTicker.substringBefore(".")
                         
                         return@withContext CachedScreenerStock(
@@ -683,13 +683,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             price = price,
                             changePct = changePct,
                             isPositive = changePct >= 0,
-                            upProb3M = upProb3M,
-                            upProb6M = upProb6M,
-                            upProb12M = upProb12M,
-                            return3M = return3M,
-                            return6M = return6M,
-                            return12M = return12M,
-                            dailyReturnsCsv = dailyReturnsCsv
+                            upProb3M = metrics.upProb3M,
+                            upProb6M = metrics.upProb6M,
+                            upProb12M = metrics.upProb12M,
+                            return3M = metrics.return3M,
+                            return6M = metrics.return6M,
+                            return12M = metrics.return12M,
+                            dailyReturnsCsv = metrics.dailyReturnsCsv
                         )
                     }
                 }
@@ -710,29 +710,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val scaleFactor = if (simulatedCloses.isNotEmpty() && simulatedCloses.last() > 0) price / simulatedCloses.last() else 1.0
                     val scaledCloses = simulatedCloses.map { it * scaleFactor }
 
-                    val upProb3M = calculateMonthlyUpProbability(scaledCloses, 3)
-                    val upProb6M = calculateMonthlyUpProbability(scaledCloses, 6)
-                    val upProb12M = calculateMonthlyUpProbability(scaledCloses, 12)
-
-                    val return3M = calculatePeriodReturn(scaledCloses, 3)
-                    val return6M = calculatePeriodReturn(scaledCloses, 6)
-                    val return12M = calculatePeriodReturn(scaledCloses, 12)
-
-                    val dailyReturns = mutableListOf<Double>()
-                    if (scaledCloses.size >= 2) {
-                        val startIdx = Math.max(0, scaledCloses.size - 31)
-                        for (i in startIdx + 1 until scaledCloses.size) {
-                            val todayClose = scaledCloses[i]
-                            val prevCloseVal = scaledCloses[i - 1]
-                            if (prevCloseVal > 0) {
-                                dailyReturns.add(((todayClose - prevCloseVal) / prevCloseVal) * 100.0)
-                            }
-                        }
-                    }
-                    while (dailyReturns.size < 30) {
-                        dailyReturns.add(0, 0.0)
-                    }
-                    val dailyReturnsCsv = dailyReturns.takeLast(30).joinToString(",") { String.format("%.2f", it) }
+                    val metrics = computeStockMetrics(scaledCloses)
 
                     Log.d("MainViewModel", "Finnhub fallback success for $yahooTicker: price=$price, changePct=$changePct")
                     return@withContext CachedScreenerStock(
@@ -741,13 +719,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         price = price,
                         changePct = changePct,
                         isPositive = changePct >= 0,
-                        upProb3M = upProb3M,
-                        upProb6M = upProb6M,
-                        upProb12M = upProb12M,
-                        return3M = return3M,
-                        return6M = return6M,
-                        return12M = return12M,
-                        dailyReturnsCsv = dailyReturnsCsv
+                        upProb3M = metrics.upProb3M,
+                        upProb6M = metrics.upProb6M,
+                        upProb12M = metrics.upProb12M,
+                        return3M = metrics.return3M,
+                        return6M = metrics.return6M,
+                        return12M = metrics.return12M,
+                        dailyReturnsCsv = metrics.dailyReturnsCsv
                     )
                 }
             }
@@ -923,11 +901,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         pStocks.mapIndexed { index, stock ->
                             launch {
                                 delay(index * 250L)
-                                val yahooTicker = if (stock.ticker.all { it.isDigit() }) {
-                                    if (stock.ticker == "247540" || stock.ticker == "086520") "${stock.ticker}.KQ" else "${stock.ticker}.KS"
-                                } else {
-                                    stock.ticker
-                                }
+                                val yahooTicker = toYahooTicker(stock.ticker)
                                 val quote = fetchQuoteWithRetry(yahooTicker, stock.ticker)
                                 if (quote != null) {
                                     stockDao.insertStock(stock.copy(price = quote.first, changePct = quote.second))
@@ -937,11 +911,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         } + wStocks.mapIndexed { index, stock ->
                             launch {
                                 delay((pStocks.size + index) * 250L)
-                                val yahooTicker = if (stock.ticker.all { it.isDigit() }) {
-                                    if (stock.ticker == "247540" || stock.ticker == "086520") "${stock.ticker}.KQ" else "${stock.ticker}.KS"
-                                } else {
-                                    stock.ticker
-                                }
+                                val yahooTicker = toYahooTicker(stock.ticker)
                                 val quote = fetchQuoteWithRetry(yahooTicker, stock.ticker)
                                 if (quote != null) {
                                     watchlistDao.insertWatchlist(stock.copy(price = quote.first, changePct = quote.second, isPositive = quote.second >= 0))
@@ -1088,14 +1058,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private suspend fun applyFallbackChartData(ticker: String, range: String) {
+        val fallback = tryFinnhubChartFallback(ticker, range)
+        if (fallback != null) {
+            _selectedStockPrices.value = fallback
+            _chartDataSource.value = "핀허브 API (Finnhub API) - 호출 성공"
+            if (!hasShownChartFetchAlert) {
+                showToast("핀허브 API 백업 차트 로드 완료")
+                hasShownChartFetchAlert = true
+            }
+        } else {
+            _selectedStockPrices.value = generateRealisticFallback(ticker, range)
+            _chartDataSource.value = "자체 AI 성과 시뮬레이션 모델 - 로컬 오프라인 캐시 적용"
+            if (!hasShownChartFetchAlert) {
+                showToast("로컬 자체 성과 차트 로드 완료")
+                hasShownChartFetchAlert = true
+            }
+        }
+    }
+
     fun loadHistoricalPrices(ticker: String, range: String) {
         viewModelScope.launch {
             _isChartLoading.value = true
-            val yahooTicker = if (ticker.all { it.isDigit() }) {
-                if (ticker == "247540" || ticker == "086520") "$ticker.KQ" else "$ticker.KS"
-            } else {
-                ticker
-            }
+            val yahooTicker = toYahooTicker(ticker)
             val apiRange = when (range) {
                 "1개월" -> "1mo"
                 "3개월" -> "3mo"
@@ -1143,60 +1128,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                     hasShownChartFetchAlert = true
                                 }
                             } else {
-                                val fallback = tryFinnhubChartFallback(ticker, range)
-                                if (fallback != null) {
-                                    _selectedStockPrices.value = fallback
-                                    _chartDataSource.value = "핀허브 API (Finnhub API) - 호출 성공"
-                                    if (!hasShownChartFetchAlert) {
-                                        showToast("핀허브 API 백업 차트 로드 완료")
-                                        hasShownChartFetchAlert = true
-                                    }
-                                } else {
-                                    _selectedStockPrices.value = generateRealisticFallback(ticker, range)
-                                    _chartDataSource.value = "자체 AI 성과 시뮬레이션 모델 - 로컬 오프라인 캐시 적용"
-                                    if (!hasShownChartFetchAlert) {
-                                        showToast("로컬 자체 성과 차트 로드 완료")
-                                        hasShownChartFetchAlert = true
-                                    }
-                                }
+                                applyFallbackChartData(ticker, range)
                             }
                         } else {
-                            val fallback = tryFinnhubChartFallback(ticker, range)
-                            if (fallback != null) {
-                                _selectedStockPrices.value = fallback
-                                _chartDataSource.value = "핀허브 API (Finnhub API) - 호출 성공"
-                                if (!hasShownChartFetchAlert) {
-                                    showToast("핀허브 API 백업 차트 로드 완료")
-                                    hasShownChartFetchAlert = true
-                                }
-                            } else {
-                                _selectedStockPrices.value = generateRealisticFallback(ticker, range)
-                                _chartDataSource.value = "자체 AI 성과 시뮬레이션 모델 - 로컬 오프라인 캐시 적용"
-                                if (!hasShownChartFetchAlert) {
-                                    showToast("로컬 자체 성과 차트 로드 완료")
-                                    hasShownChartFetchAlert = true
-                                }
-                            }
+                            applyFallbackChartData(ticker, range)
                         }
                     }
                 } catch (e: Exception) {
                     Log.e("MainViewModel", "Failed to fetch historical prices for $ticker via Yahoo, trying Finnhub", e)
-                    val fallback = tryFinnhubChartFallback(ticker, range)
-                    if (fallback != null) {
-                        _selectedStockPrices.value = fallback
-                        _chartDataSource.value = "핀허브 API (Finnhub API) - 호출 성공"
-                        if (!hasShownChartFetchAlert) {
-                            showToast("핀허브 API 백업 차트 로드 완료")
-                            hasShownChartFetchAlert = true
-                        }
-                    } else {
-                        _selectedStockPrices.value = generateRealisticFallback(ticker, range)
-                        _chartDataSource.value = "자체 AI 성과 시뮬레이션 모델 - 로컬 오프라인 캐시 적용"
-                        if (!hasShownChartFetchAlert) {
-                            showToast("로컬 자체 성과 차트 로드 완료")
-                            hasShownChartFetchAlert = true
-                        }
-                    }
+                    applyFallbackChartData(ticker, range)
                 } finally {
                     _isChartLoading.value = false
                 }
