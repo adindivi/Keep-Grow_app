@@ -7,16 +7,19 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.QueryStats
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -27,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -48,6 +52,9 @@ import com.example.ui.screens.PortfolioScreen
 import com.example.ui.screens.ScreenerScreen
 import com.example.ui.screens.HighGrowthScreenerScreen
 import com.example.ui.theme.MyApplicationTheme
+import com.example.ui.theme.TossGray200
+import com.example.ui.theme.TossGray600
+import com.example.ui.theme.TossBlue50
 import com.example.ui.viewmodel.MainViewModel
 import com.example.ui.viewmodel.ScreenTab
 
@@ -240,85 +247,213 @@ fun MainAppLayout(viewModel: MainViewModel) {
         bottomBar = {
             // Show bottom navigation if not viewing stock detail
             if (isViewingDetail == null) {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 8.dp
+                // ── Fintech-style Navigation Bar ──────────────────────────────
+                // 순백(White) 배경 + 상단 1px TossGray200 구분선 + 미세 그림자
+                Surface(
+                    color = Color.White,
+                    shadowElevation = 6.dp,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    NavigationBarItem(
-                        selected = currentTab == ScreenTab.HOME,
-                        onClick = { viewModel.selectTab(ScreenTab.HOME) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Home,
-                                contentDescription = "Home"
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(
+                                width = 1.dp,
+                                color = TossGray200,
+                                shape = RoundedCornerShape(0.dp)
                             )
-                        },
-                        label = { Text("홈", fontWeight = FontWeight.Bold) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                        )
-                    )
+                    ) {
+                        NavigationBar(
+                            containerColor = Color.White,
+                            tonalElevation = 0.dp
+                        ) {
+                            // ── 홈 탭 ──────────────────────────────────────
+                            NavigationBarItem(
+                                selected = currentTab == ScreenTab.HOME,
+                                onClick = { viewModel.selectTab(ScreenTab.HOME) },
+                                icon = {
+                                    // 활성: 화이트 캡슐 + 1px TossGray200 테두리 + 파란 아이콘
+                                    // 비활성: 아이콘만 (TossGray600)
+                                    if (currentTab == ScreenTab.HOME) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(width = 56.dp, height = 32.dp)
+                                                .shadow(elevation = 2.dp, shape = RoundedCornerShape(100.dp), clip = false)
+                                                .clip(RoundedCornerShape(100.dp))
+                                                .background(TossBlue50)
+                                                .border(1.dp, TossGray200, RoundedCornerShape(100.dp)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.Home,
+                                                contentDescription = "Home",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Home,
+                                            contentDescription = "Home",
+                                            tint = TossGray600,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                },
+                                label = {
+                                    Text(
+                                        "홈",
+                                        fontWeight = if (currentTab == ScreenTab.HOME) FontWeight.Bold else FontWeight.Normal,
+                                        fontSize = 10.sp
+                                    )
+                                },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    unselectedTextColor = TossGray600,
+                                    indicatorColor = Color.Transparent
+                                )
+                            )
 
-                    NavigationBarItem(
-                        selected = currentTab == ScreenTab.STOCKS,
-                        onClick = { viewModel.selectTab(ScreenTab.STOCKS) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.TrendingUp,
-                                contentDescription = "Screener"
+                            // ── 종목 탭 ────────────────────────────────────
+                            NavigationBarItem(
+                                selected = currentTab == ScreenTab.STOCKS,
+                                onClick = { viewModel.selectTab(ScreenTab.STOCKS) },
+                                icon = {
+                                    if (currentTab == ScreenTab.STOCKS) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(width = 56.dp, height = 32.dp)
+                                                .shadow(elevation = 2.dp, shape = RoundedCornerShape(100.dp), clip = false)
+                                                .clip(RoundedCornerShape(100.dp))
+                                                .background(TossBlue50)
+                                                .border(1.dp, TossGray200, RoundedCornerShape(100.dp)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                                                contentDescription = "Screener",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Outlined.ShowChart,
+                                            contentDescription = "Screener",
+                                            tint = TossGray600,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                },
+                                label = {
+                                    Text(
+                                        "종목",
+                                        fontWeight = if (currentTab == ScreenTab.STOCKS) FontWeight.Bold else FontWeight.Normal,
+                                        fontSize = 10.sp
+                                    )
+                                },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    unselectedTextColor = TossGray600,
+                                    indicatorColor = Color.Transparent
+                                )
                             )
-                        },
-                        label = { Text("종목", fontWeight = FontWeight.Bold) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                        )
-                    )
 
-                    NavigationBarItem(
-                        selected = currentTab == ScreenTab.PORTFOLIO,
-                        onClick = { viewModel.selectTab(ScreenTab.PORTFOLIO) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.AccountBalanceWallet,
-                                contentDescription = "Portfolio"
+                            // ── 포트폴리오 탭 ──────────────────────────────
+                            NavigationBarItem(
+                                selected = currentTab == ScreenTab.PORTFOLIO,
+                                onClick = { viewModel.selectTab(ScreenTab.PORTFOLIO) },
+                                icon = {
+                                    if (currentTab == ScreenTab.PORTFOLIO) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(width = 56.dp, height = 32.dp)
+                                                .shadow(elevation = 2.dp, shape = RoundedCornerShape(100.dp), clip = false)
+                                                .clip(RoundedCornerShape(100.dp))
+                                                .background(TossBlue50)
+                                                .border(1.dp, TossGray200, RoundedCornerShape(100.dp)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.AccountBalanceWallet,
+                                                contentDescription = "Portfolio",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Outlined.AccountBalanceWallet,
+                                            contentDescription = "Portfolio",
+                                            tint = TossGray600,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                },
+                                label = {
+                                    Text(
+                                        "포트폴리오",
+                                        fontWeight = if (currentTab == ScreenTab.PORTFOLIO) FontWeight.Bold else FontWeight.Normal,
+                                        fontSize = 10.sp,
+                                        softWrap = false,
+                                        maxLines = 1
+                                    )
+                                },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    unselectedTextColor = TossGray600,
+                                    indicatorColor = Color.Transparent
+                                )
                             )
-                        },
-                        label = { Text("포트폴리오", fontWeight = FontWeight.Bold) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                        )
-                    )
 
-                    NavigationBarItem(
-                        selected = currentTab == ScreenTab.HIGH_GROWTH,
-                        onClick = { viewModel.selectTab(ScreenTab.HIGH_GROWTH) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = "High Growth"
+                            // ── 고성장 24 탭 ───────────────────────────────
+                            NavigationBarItem(
+                                selected = currentTab == ScreenTab.HIGH_GROWTH,
+                                onClick = { viewModel.selectTab(ScreenTab.HIGH_GROWTH) },
+                                icon = {
+                                    if (currentTab == ScreenTab.HIGH_GROWTH) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(width = 56.dp, height = 32.dp)
+                                                .shadow(elevation = 2.dp, shape = RoundedCornerShape(100.dp), clip = false)
+                                                .clip(RoundedCornerShape(100.dp))
+                                                .background(TossBlue50)
+                                                .border(1.dp, TossGray200, RoundedCornerShape(100.dp)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.QueryStats,
+                                                contentDescription = "High Growth",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Outlined.QueryStats,
+                                            contentDescription = "High Growth",
+                                            tint = TossGray600,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                },
+                                label = {
+                                    Text(
+                                        "고성장24",
+                                        fontWeight = if (currentTab == ScreenTab.HIGH_GROWTH) FontWeight.Bold else FontWeight.Normal,
+                                        fontSize = 10.sp,
+                                        softWrap = false,
+                                        maxLines = 1
+                                    )
+                                },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    unselectedTextColor = TossGray600,
+                                    indicatorColor = Color.Transparent
+                                )
                             )
-                        },
-                        label = { Text("고성장 24", fontWeight = FontWeight.Bold) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                        )
-                    )
+                        }
+                    }
                 }
             }
         },

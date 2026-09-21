@@ -20,6 +20,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.CompareArrows
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -225,7 +228,7 @@ fun PortfolioScreen(
 
                     val positiveChange = dailyChangePercentage >= 0
                     val trendColor = if (positiveChange) Color(0xFFBA1A1A) else Color(0xFF0058bc)
-                    val trendIcon = if (positiveChange) Icons.Default.TrendingUp else Icons.Default.TrendingDown
+                    val trendIcon = if (positiveChange) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -611,7 +614,7 @@ fun PortfolioScreen(
                         modifier = Modifier.height(36.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.CompareArrows,
+                            imageVector = Icons.AutoMirrored.Filled.CompareArrows,
                             contentDescription = "리밸런싱",
                             modifier = Modifier.size(16.dp)
                         )

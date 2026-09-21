@@ -8,6 +8,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
+import androidx.compose.material.icons.outlined.Bedtime
+import androidx.compose.material.icons.outlined.RocketLaunch
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -18,12 +21,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.FintechIconBadge
+import com.example.ui.components.FintechPillTag
 import com.example.ui.components.ToppingCard
 import com.example.ui.components.ToppingType
+import com.example.ui.theme.FintechBadgeBorder
+import com.example.ui.theme.TossGray200
+import com.example.ui.theme.TossGray600
 import com.example.ui.util.debouncedClickable
 import com.example.ui.viewmodel.MainViewModel
 import com.example.ui.viewmodel.ProfileType
@@ -112,9 +121,9 @@ fun HomeScreen(
                     title = "마라톤",
                     subtitle = "안전하게, 꾸준히",
                     tags = listOf("#안정지향", "#장기투자", "#자산배분"),
-                    backgroundColor = Color(0xFF0058bc).copy(alpha = 0.08f),
                     accentColor = Color(0xFF0058bc),
-                    iconSymbol = "🏃",
+                    icon = Icons.AutoMirrored.Outlined.DirectionsRun,
+                    iconTint = Color(0xFF0058bc),
                     onSelect = { viewModel.selectProfileAndSave(ProfileType.MARATHON) }
                 )
 
@@ -124,9 +133,9 @@ fun HomeScreen(
                     title = "로켓",
                     subtitle = "높은 수익, 높은 위험",
                     tags = listOf("#고수익", "#성장주", "#하이리스크"),
-                    backgroundColor = Color(0xFF8a2bb9).copy(alpha = 0.08f),
                     accentColor = Color(0xFF8a2bb9),
-                    iconSymbol = "🚀",
+                    icon = Icons.Outlined.RocketLaunch,
+                    iconTint = Color(0xFF8a2bb9),
                     onSelect = { viewModel.selectProfileAndSave(ProfileType.ROCKET) }
                 )
 
@@ -136,9 +145,9 @@ fun HomeScreen(
                     title = "꿀잠",
                     subtitle = "편안하게, 흔들림 없이",
                     tags = listOf("#배당성장", "#저변동", "#심리안정"),
-                    backgroundColor = Color(0xFF4c4aca).copy(alpha = 0.08f),
                     accentColor = Color(0xFF4c4aca),
-                    iconSymbol = "🛌",
+                    icon = Icons.Outlined.Bedtime,
+                    iconTint = Color(0xFF4c4aca),
                     onSelect = { viewModel.selectProfileAndSave(ProfileType.SLEEP) }
                 )
             }
@@ -237,25 +246,29 @@ fun ProfileBentoCard(
     title: String,
     subtitle: String,
     tags: List<String>,
-    backgroundColor: Color,
     accentColor: Color,
-    iconSymbol: String,
+    icon: ImageVector,
+    iconTint: Color,
     onSelect: () -> Unit
 ) {
+    // 선택 시: accentColor 2dp 테두리, 비선택 시: TossGray200 1dp 테두리
+    val borderStroke = if (selected)
+        androidx.compose.foundation.BorderStroke(2.dp, accentColor)
+    else
+        androidx.compose.foundation.BorderStroke(1.dp, TossGray200)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .debouncedClickable { onSelect() }
-            .border(
-                width = if (selected) 2.dp else 0.dp,
-                color = if (selected) accentColor else Color.Transparent,
-                shape = RoundedCornerShape(20.dp)
-            ),
+            .debouncedClickable { onSelect() },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+            containerColor = Color.White
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = borderStroke,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (selected) 3.dp else 1.dp
+        )
     ) {
         Row(
             modifier = Modifier
@@ -263,16 +276,18 @@ fun ProfileBentoCard(
                 .padding(18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Profile icon badge
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(backgroundColor),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = iconSymbol, fontSize = 24.sp)
-            }
+            // ── 핀테크 벡터 아이콘 배지 (화이트 + 1px TossGray200 테두리) ──
+            FintechIconBadge(
+                icon = icon,
+                contentDescription = title,
+                size = 52.dp,
+                iconSize = 26.dp,
+                cornerRadius = 14.dp,
+                tint = iconTint,
+                backgroundColor = accentColor.copy(alpha = 0.06f),
+                borderColor = accentColor.copy(alpha = 0.20f),
+                elevation = if (selected) 3.dp else 1.dp
+            )
 
             Spacer(modifier = Modifier.width(16.dp))
 
@@ -286,11 +301,12 @@ fun ProfileBentoCard(
                     )
                     if (selected) {
                         Spacer(modifier = Modifier.width(8.dp))
+                        // 선택됨 뱃지: accentColor 배경 + 흰 텍스트
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
+                                .clip(RoundedCornerShape(6.dp))
                                 .background(accentColor)
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                .padding(horizontal = 7.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = "선택됨",
@@ -301,28 +317,20 @@ fun ProfileBentoCard(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(3.dp))
                 Text(
                     text = subtitle,
                     fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = TossGray600
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
+                // ── FintechPillTag: 화이트 배경 + 1px TossGray200 테두리 캡슐 ──
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     tags.forEach { tag ->
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(100.dp))
-                                .background(MaterialTheme.colorScheme.background)
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = tag,
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
+                        FintechPillTag(
+                            text = tag,
+                            textColor = TossGray600
+                        )
                     }
                 }
             }

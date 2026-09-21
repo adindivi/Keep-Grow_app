@@ -2,7 +2,7 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Light Colors
+// ── App Brand Colors ─────────────────────────────────────────────────────────
 val Primary = Color(0xFF0058bc)
 val PrimaryContainer = Color(0xFF0070eb)
 val OnPrimary = Color(0xFFFFFFFF)
@@ -40,3 +40,28 @@ val OnSurfaceDark = Color(0xFFECEFF5)
 val OnSurfaceVariantDark = Color(0xFFC5C6D0)
 val SurfaceVariantDark = Color(0xFF25262B)
 
+// ── Toss Fintech Design System Palette ───────────────────────────────────────
+// Gray Scale (토스 그레이 스케일)
+val TossGray50  = Color(0xFFF9FAFB)   // 카드 배경
+val TossGray100 = Color(0xFFF2F4F6)   // 비활성 배지 배경
+val TossGray200 = Color(0xFFE5E8EB)   // 캡슐 테두리 1px (핵심 토큰!)
+val TossGray300 = Color(0xFFD1D6DB)   // 구분선
+val TossGray400 = Color(0xFFB0B8C1)   // Disabled 텍스트
+val TossGray500 = Color(0xFF8B95A1)   // 서브 텍스트 (라이트)
+val TossGray600 = Color(0xFF6B7684)   // 서브 텍스트 (다크)
+val TossGray700 = Color(0xFF4E5968)   // 보조 라벨
+val TossGray900 = Color(0xFF191F28)   // 최상위 제목
+
+// Semantic Colors (핀테크 시맨틱 색상)
+val TossBlue    = Color(0xFF1B64DA)   // 주요 액션 / 링크
+val TossBlue50  = Color(0xFFEBF0FB)   // 파란 배지 배경
+val TossGreen   = Color(0xFF00C073)   // 수익 / 긍정
+val TossGreen50 = Color(0xFFE5F9F0)   // 초록 배지 배경
+val TossRed     = Color(0xFFF04452)   // 손실 / 위험
+val TossRed50   = Color(0xFFFEEEEF)   // 빨간 배지 배경
+val TossOrange  = Color(0xFFFF8000)   // 경고
+val TossOrange50= Color(0xFFFFF3E0)   // 주황 배지 배경
+
+// Icon Badge (화이트 캡슐 배지 기준)
+val FintechBadgeBackground = Color(0xFFFFFFFF)   // 순백 배경
+val FintechBadgeBorder     = TossGray200          // 1px 테두리
