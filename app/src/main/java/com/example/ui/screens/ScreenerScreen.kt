@@ -2,20 +2,24 @@ package com.example.ui.screens
 
 import android.widget.Toast
 import androidx.compose.animation.*
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.FilterAlt
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,9 +28,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import com.example.ui.components.FintechIconBadge
+import com.example.ui.components.FintechSegmentedControl
 import com.example.ui.components.FintechTextBadge
+import com.example.ui.components.SegmentTabItem
 import com.example.ui.theme.FintechBadgeBackground
 import com.example.ui.theme.TossGray200
+import com.example.ui.viewmodel.ProfileType
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -151,7 +158,7 @@ fun ScreenerScreen(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
                 ),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                border = BorderStroke(1.dp, TossGray200),
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Column(
@@ -218,152 +225,262 @@ fun ScreenerScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                                .padding(top = 14.dp)
                         ) {
-                            // (A) Period Chooser (3, 6, 12 months)
-                            Column {
-                                Text(
-                                    text = "기간 선택",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                            var filterTab by remember { mutableIntStateOf(0) }
+                            val filterTabItems = remember {
+                                listOf(
+                                    SegmentTabItem(title = "성향 추천", icon = Icons.Outlined.FilterAlt),
+                                    SegmentTabItem(title = "상승 확률", icon = Icons.AutoMirrored.Outlined.TrendingUp),
+                                    SegmentTabItem(title = "변동/위험", icon = Icons.Outlined.WarningAmber)
                                 )
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    listOf("3개월", "6개월", "12개월").forEach { period ->
-                                        val isSelected = selectedPeriod == period
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .background(
-                                                    if (isSelected) MaterialTheme.colorScheme.primary
-                                                    else MaterialTheme.colorScheme.surfaceContainerLowest
+                            }
+
+                            // 3-Tab Segmented Control
+                            FintechSegmentedControl(
+                                items = filterTabItems,
+                                selectedIndex = filterTab,
+                                onTabSelected = { filterTab = it },
+                                containerHeight = 40.dp
+                            )
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Tab Content with Fluid Spring Horizontal Slide
+                            AnimatedContent(
+                                targetState = filterTab,
+                                transitionSpec = {
+                                    if (targetState > initialState) {
+                                        (slideInHorizontally(
+                                            animationSpec = spring(
+                                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                                stiffness = Spring.StiffnessMediumLow
+                                            )
+                                        ) { width -> (width * 0.35f).toInt() } + fadeIn(
+                                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                        )).togetherWith(
+                                            slideOutHorizontally(
+                                                animationSpec = spring(
+                                                    dampingRatio = Spring.DampingRatioNoBouncy,
+                                                    stiffness = Spring.StiffnessMediumLow
                                                 )
-                                                .border(
-                                                    width = 1.dp,
-                                                    color = if (isSelected) Color.Transparent else MaterialTheme.colorScheme.outlineVariant,
-                                                    shape = RoundedCornerShape(8.dp)
+                                            ) { width -> (-width * 0.35f).toInt() } + fadeOut()
+                                        )
+                                    } else {
+                                        (slideInHorizontally(
+                                            animationSpec = spring(
+                                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                                stiffness = Spring.StiffnessMediumLow
+                                            )
+                                        ) { width -> (-width * 0.35f).toInt() } + fadeIn(
+                                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                        )).togetherWith(
+                                            slideOutHorizontally(
+                                                animationSpec = spring(
+                                                    dampingRatio = Spring.DampingRatioNoBouncy,
+                                                    stiffness = Spring.StiffnessMediumLow
                                                 )
-                                                .clickable { viewModel.setSelectedMonthPeriod(period) }
-                                                .padding(vertical = 8.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
+                                            ) { width -> (width * 0.35f).toInt() } + fadeOut()
+                                        )
+                                    }
+                                },
+                                label = "screener_filter_tab_content"
+                            ) { tabIndex ->
+                                when (tabIndex) {
+                                    0 -> {
+                                        // ── TAB 1: 성향 추천 프리셋 ───────────────────────
+                                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                             Text(
-                                                text = period,
+                                                text = "투자 성향별 추천 프리셋",
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
+                                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                listOf(
+                                                    ProfileType.MARATHON to "마라톤(안정)",
+                                                    ProfileType.ROCKET to "로켓(성장)",
+                                                    ProfileType.SLEEP to "꿀잠(저변동)"
+                                                ).forEach { (profile, label) ->
+                                                    val isSelected = selectedProfile == profile
+                                                    Surface(
+                                                        shape = RoundedCornerShape(10.dp),
+                                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
+                                                        border = BorderStroke(1.dp, if (isSelected) Color.Transparent else TossGray200),
+                                                        modifier = Modifier
+                                                            .weight(1f)
+                                                            .clickable { viewModel.selectProfileAndSave(profile) }
+                                                    ) {
+                                                        Text(
+                                                            text = label,
+                                                            fontSize = 11.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                                                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                                            maxLines = 1,
+                                                            softWrap = false,
+                                                            modifier = Modifier.padding(vertical = 10.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            Text(
+                                                text = when (selectedProfile) {
+                                                    ProfileType.MARATHON -> "12개월 기준 우상향 확률 60% 이상 & 안정 성장 종목 중심"
+                                                    ProfileType.ROCKET -> "3개월 기준 높은 상승 모멘텀 & 고수익 추구 종목 중심"
+                                                    ProfileType.SLEEP -> "일일 변동폭 1.5% 이내 & 안정적 배당 우량주 중심"
+                                                },
+                                                fontSize = 11.sp,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                fontWeight = FontWeight.Medium,
+                                                modifier = Modifier.padding(top = 2.dp)
+                                            )
+                                        }
+                                    }
+                                    1 -> {
+                                        // ── TAB 2: 상승 확률 & 기간 ───────────────────────
+                                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                                            Column {
+                                                Text(
+                                                    text = "분석 기간 선택",
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                                Spacer(modifier = Modifier.height(6.dp))
+                                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                    listOf("3개월", "6개월", "12개월").forEach { period ->
+                                                        val isSelected = selectedPeriod == period
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .weight(1f)
+                                                                .clip(RoundedCornerShape(8.dp))
+                                                                .background(
+                                                                    if (isSelected) MaterialTheme.colorScheme.primary
+                                                                    else MaterialTheme.colorScheme.surfaceContainerLowest
+                                                                )
+                                                                .border(
+                                                                    width = 1.dp,
+                                                                    color = if (isSelected) Color.Transparent else TossGray200,
+                                                                    shape = RoundedCornerShape(8.dp)
+                                                                )
+                                                                .clickable { viewModel.setSelectedMonthPeriod(period) }
+                                                                .padding(vertical = 8.dp),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Text(
+                                                                text = period,
+                                                                fontSize = 12.sp,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            Column {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Text(
+                                                        text = "매월 올랐던 확률 기준",
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                    Text(
+                                                        text = "${(minUpProb * 100).toInt()}% 이상",
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
+                                                Slider(
+                                                    value = minUpProb,
+                                                    onValueChange = { viewModel.setMinMonthlyUpProbability(it) },
+                                                    valueRange = 0.0f..1.0f,
+                                                    steps = 9,
+                                                    colors = SliderDefaults.colors(
+                                                        thumbColor = MaterialTheme.colorScheme.primary,
+                                                        activeTrackColor = MaterialTheme.colorScheme.primary
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                    2 -> {
+                                        // ── TAB 3: 변동성 & 위험 관리 ─────────────────────
+                                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                                            Column {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Text(
+                                                        text = "일일 급등락 변동폭 기준",
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                    Text(
+                                                        text = "±${String.format("%.1f", surgeThreshold)}% 이상",
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
+                                                Slider(
+                                                    value = surgeThreshold,
+                                                    onValueChange = { viewModel.setSurgePlungeThreshold(it) },
+                                                    valueRange = 1.0f..15.0f,
+                                                    steps = 13,
+                                                    colors = SliderDefaults.colors(
+                                                        thumbColor = MaterialTheme.colorScheme.primary,
+                                                        activeTrackColor = MaterialTheme.colorScheme.primary
+                                                    )
+                                                )
+                                            }
+
+                                            Column {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Text(
+                                                        text = "급등락 발생 횟수 (최근 30일)",
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                    Text(
+                                                        text = "${minSurgeCount}회 이상",
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
+                                                Slider(
+                                                    value = minSurgeCount.toFloat(),
+                                                    onValueChange = { viewModel.setMinSurgePlungeCount(it.toInt()) },
+                                                    valueRange = 0.0f..10.0f,
+                                                    steps = 9,
+                                                    colors = SliderDefaults.colors(
+                                                        thumbColor = MaterialTheme.colorScheme.primary,
+                                                        activeTrackColor = MaterialTheme.colorScheme.primary
+                                                    )
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
-
-                    // (B) Monthly Rising Probability Slider
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "매월 올랐던 확률",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Text(
-                                text = "${(minUpProb * 100).toInt()}% 이상",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.End
-                            )
                         }
-                        Slider(
-                            value = minUpProb,
-                            onValueChange = { viewModel.setMinMonthlyUpProbability(it) },
-                            valueRange = 0.0f..1.0f,
-                            steps = 9, // Allows 10% steps
-                            colors = SliderDefaults.colors(
-                                thumbColor = MaterialTheme.colorScheme.primary,
-                                activeTrackColor = MaterialTheme.colorScheme.primary
-                            )
-                        )
                     }
-
-                    // (C) Daily Surge/Plunge Threshold Slider
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "일일 급등락 변동폭 기준",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Text(
-                                text = "±${String.format("%.1f", surgeThreshold)}% 이상",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.End
-                            )
-                        }
-                        Slider(
-                            value = surgeThreshold,
-                            onValueChange = { viewModel.setSurgePlungeThreshold(it) },
-                            valueRange = 1.0f..15.0f,
-                            steps = 13, // Allows 1% steps
-                            colors = SliderDefaults.colors(
-                                thumbColor = MaterialTheme.colorScheme.primary,
-                                activeTrackColor = MaterialTheme.colorScheme.primary
-                            )
-                        )
-                    }
-
-                    // (D) Daily Surge/Plunge Occurrence Count Slider
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "급등락 발생 횟수 (최근 30일)",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Text(
-                                text = "${minSurgeCount}회 이상",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.End
-                            )
-                        }
-                        Slider(
-                            value = minSurgeCount.toFloat(),
-                            onValueChange = { viewModel.setMinSurgePlungeCount(it.toInt()) },
-                            valueRange = 0.0f..10.0f,
-                            steps = 9, // Allows integer steps 0 to 10
-                            colors = SliderDefaults.colors(
-                                thumbColor = MaterialTheme.colorScheme.primary,
-                                activeTrackColor = MaterialTheme.colorScheme.primary
-                            )
-                        )
-                    }
-                }
-            }
         }
     }
 }
