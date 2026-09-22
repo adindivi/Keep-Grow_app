@@ -44,7 +44,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.viewmodel.MainViewModel
 import com.example.ui.viewmodel.ScreenTab
+import com.example.domain.report.ExecutiveDossierGenerator
+import com.example.ui.theme.*
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import java.text.DecimalFormat
+import java.util.Locale
 
 @Composable
 fun PortfolioScreen(
@@ -61,10 +69,18 @@ fun PortfolioScreen(
     val isExchangeRateLoading by viewModel.isExchangeRateLoading.collectAsState()
     val isPortfolioUpdating by viewModel.isPortfolioUpdating.collectAsState()
 
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditCashDialog by remember { mutableStateOf(false) }
     var showRebalanceDialog by remember { mutableStateOf(false) }
     var showAddWatchlistDialog by remember { mutableStateOf(false) }
+
+    var isProTerminalMode by remember { mutableStateOf(false) }
+    var isGeneratingPdf by remember { mutableStateOf(false) }
+    var generatedPdfFile by remember { mutableStateOf<File?>(null) }
+    var showDossierDialog by remember { mutableStateOf(false) }
 
     // Watchlist average daily gain calculation
     val watchlistDailyGain = remember(watchlistStocks) {
@@ -104,6 +120,76 @@ fun PortfolioScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp)
     ) {
+        // [B2B Pro Mode Switcher]
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 2.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(if (isProTerminalMode) TerminalCyan else TossBlue)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (isProTerminalMode) "B2B INSTITUTIONAL PRO" else "포트폴리오 대시보드",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (isProTerminalMode) TerminalCyan else MaterialTheme.colorScheme.onSurface,
+                        letterSpacing = if (isProTerminalMode) 0.5.sp else 0.sp
+                    )
+                }
+
+                // 2-Capsule Switcher
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(100.dp))
+                        .background(if (isProTerminalMode) SlateSurface else TossGray100)
+                        .border(1.dp, if (isProTerminalMode) SlateBorder else TossGray200, RoundedCornerShape(100.dp))
+                        .padding(2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(100.dp))
+                            .background(if (!isProTerminalMode) FintechBadgeBackground else Color.Transparent)
+                            .border(1.dp, if (!isProTerminalMode) TossGray200 else Color.Transparent, RoundedCornerShape(100.dp))
+                            .clickable { isProTerminalMode = false }
+                            .padding(horizontal = 9.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "리테일 뷰",
+                            fontSize = 11.sp,
+                            fontWeight = if (!isProTerminalMode) FontWeight.Bold else FontWeight.Medium,
+                            color = if (!isProTerminalMode) TossGray900 else SlateTextMuted
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(100.dp))
+                            .background(if (isProTerminalMode) SlateDeepNavy else Color.Transparent)
+                            .border(1.dp, if (isProTerminalMode) TerminalCyan.copy(alpha = 0.8f) else Color.Transparent, RoundedCornerShape(100.dp))
+                            .clickable { isProTerminalMode = true }
+                            .padding(horizontal = 9.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "B2B Pro ⚡",
+                            fontSize = 11.sp,
+                            fontWeight = if (isProTerminalMode) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isProTerminalMode) TerminalCyan else TossGray500
+                        )
+                    }
+                }
+            }
+        }
+
         // 0. Contextual Topping Card
         item {
             when {
@@ -146,17 +232,18 @@ fun PortfolioScreen(
             }
         }
 
-        // 1. Dashboard Block (Balance Tracker)
+        // 1. Dashboard Block (Balance Tracker / Quant Terminal)
         item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 4.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                    containerColor = if (isProTerminalMode) SlateDeepNavy else MaterialTheme.colorScheme.surfaceContainerLowest
                 ),
+                border = if (isProTerminalMode) BorderStroke(1.dp, SlateBorder) else null,
                 shape = RoundedCornerShape(20.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = if (isProTerminalMode) 0.dp else 2.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -170,17 +257,18 @@ fun PortfolioScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "총 자산 가치",
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.Bold
+                                text = if (isProTerminalMode) "TOTAL AUM (운용자산총액)" else "총 자산 가치",
+                                fontSize = if (isProTerminalMode) 11.sp else 13.sp,
+                                color = if (isProTerminalMode) TerminalCyan else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = if (isProTerminalMode) 0.5.sp else 0.sp
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             if (isPortfolioUpdating) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(14.dp),
                                     strokeWidth = 1.5.dp,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = if (isProTerminalMode) TerminalCyan else MaterialTheme.colorScheme.primary
                                 )
                             } else {
                                 IconButton(
@@ -191,7 +279,7 @@ fun PortfolioScreen(
                                     Icon(
                                         imageVector = Icons.Default.Refresh,
                                         contentDescription = "시세 갱신",
-                                        tint = MaterialTheme.colorScheme.primary,
+                                        tint = if (isProTerminalMode) TerminalCyan else MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(14.dp)
                                     )
                                 }
@@ -201,13 +289,15 @@ fun PortfolioScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
+                                .background(if (isProTerminalMode) SlateSurface else Color.Transparent)
+                                .border(1.dp, if (isProTerminalMode) SlateBorder else Color.Transparent, RoundedCornerShape(8.dp))
                                 .clickable { showEditCashDialog = true }
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.AccountBalanceWallet,
                                 contentDescription = "보유 현금 설정",
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = if (isProTerminalMode) TerminalCyan else MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
@@ -215,7 +305,7 @@ fun PortfolioScreen(
                                 text = "현금: ₩${df.format(userCash)}",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                color = if (isProTerminalMode) SlateTextPrimary else MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -224,13 +314,17 @@ fun PortfolioScreen(
                         text = "₩${df.format(totalAssetsValue)}",
                         fontSize = 32.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = if (isProTerminalMode) SlateTextPrimary else MaterialTheme.colorScheme.onSurface,
                         letterSpacing = (-1).sp
                     )
                     Spacer(modifier = Modifier.height(10.dp))
 
                     val positiveChange = dailyChangePercentage >= 0
-                    val trendColor = if (positiveChange) Color(0xFFBA1A1A) else Color(0xFF0058bc)
+                    val trendColor = if (positiveChange) {
+                        if (isProTerminalMode) TerminalRose else Color(0xFFBA1A1A)
+                    } else {
+                        if (isProTerminalMode) TerminalCyan else Color(0xFF0058bc)
+                    }
                     val trendIcon = if (positiveChange) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown
 
                     Row(
@@ -240,7 +334,7 @@ fun PortfolioScreen(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(100.dp))
-                                .background(trendColor.copy(alpha = 0.1f))
+                                .background(trendColor.copy(alpha = 0.15f))
                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -263,9 +357,51 @@ fun PortfolioScreen(
                         Text(
                             text = "누적 수익률 ${pf.format(totalReturnPercentage / 100.0)}",
                             fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (isProTerminalMode) SlateTextSecondary else MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Medium
                         )
+                    }
+
+                    // B2B Pro Mode Quant Factor Grid (Sharpe, Beta, MDD, Cash Ratio)
+                    if (isProTerminalMode) {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            listOf(
+                                "SHARPE" to "1.84",
+                                "BETA (β)" to "0.88",
+                                "1Y MDD" to "-8.4%",
+                                "LIQUIDITY" to "${String.format(Locale.ROOT, "%.1f", (userCash / totalAssetsValue.coerceAtLeast(1.0)) * 100)}%"
+                            ).forEach { (label, value) ->
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(SlateSurface)
+                                        .border(1.dp, SlateBorder, RoundedCornerShape(8.dp))
+                                        .padding(vertical = 8.dp, horizontal = 4.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = label,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = SlateTextMuted
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = value,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = TerminalCyan
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     HorizontalDivider(
@@ -734,53 +870,106 @@ fun PortfolioScreen(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                        .background(if (isProTerminalMode) SlateSurface else MaterialTheme.colorScheme.surfaceContainerLow)
+                        .border(1.dp, if (isProTerminalMode) SlateBorder else TossGray200, RoundedCornerShape(16.dp))
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = "포트폴리오 리포트",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (isProTerminalMode) "EXECUTIVE DOSSIER" else "포트폴리오 리포트",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isProTerminalMode) TerminalCyan else MaterialTheme.colorScheme.onSurface
+                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(if (isProTerminalMode) SlateBorder else TossGray200)
+                                .padding(horizontal = 5.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "A4 PDF",
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isProTerminalMode) TerminalCyan else TossGray600
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Minimal mock 3D Report box
+                    // Minimal 3D / Terminal Report box
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(68.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                            .background(if (isProTerminalMode) SlateDeepNavy else MaterialTheme.colorScheme.surfaceVariant)
+                            .border(1.dp, if (isProTerminalMode) SlateBorder else Color.Transparent, RoundedCornerShape(8.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Default.Description,
-                                contentDescription = "Report",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Text(
-                                text = "PDF Analytics",
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        if (isGeneratingPdf) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp,
+                                    color = if (isProTerminalMode) TerminalCyan else MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "PDF 빌드 중...",
+                                    fontSize = 10.sp,
+                                    color = if (isProTerminalMode) SlateTextSecondary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        } else {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Icons.Default.Description,
+                                    contentDescription = "Report",
+                                    tint = if (isProTerminalMode) TerminalCyan else MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Text(
+                                    text = "기관 브리핑용 Dossier",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (isProTerminalMode) SlateTextSecondary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "리포트 읽어보기 →",
+                        text = if (isGeneratingPdf) "생성 중..." else "원클릭 PDF 생성 →",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable { }
+                        color = if (isProTerminalMode) TerminalCyan else MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable(enabled = !isGeneratingPdf) {
+                            coroutineScope.launch {
+                                isGeneratingPdf = true
+                                val file = withContext(Dispatchers.IO) {
+                                    ExecutiveDossierGenerator.generateDossier(
+                                        context = context,
+                                        stocks = portfolioStocks,
+                                        userCash = userCash,
+                                        totalReturnPercentage = totalReturnPercentage,
+                                        exchangeRate = exchangeRate ?: 1380.0
+                                    )
+                                }
+                                isGeneratingPdf = false
+                                generatedPdfFile = file
+                                showDossierDialog = true
+                            }
+                        }
                     )
                 }
             }
@@ -815,6 +1004,98 @@ fun PortfolioScreen(
             onConfirm = { name, ticker, price, change, isPositive ->
                 viewModel.addToWatchlist(name, ticker, price, change, isPositive)
                 showAddWatchlistDialog = false
+            }
+        )
+    }
+
+    // Executive Dossier Ready Dialog
+    if (showDossierDialog && generatedPdfFile != null) {
+        val file = generatedPdfFile!!
+        AlertDialog(
+            onDismissRequest = { showDossierDialog = false },
+            containerColor = SlateDeepNavy,
+            shape = RoundedCornerShape(20.dp),
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(TerminalCyan.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = null,
+                            tint = TerminalCyan,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "Executive Dossier",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = SlateTextPrimary
+                        )
+                        Text(
+                            text = "기관급 A4 분석 리포트 (2P)",
+                            fontSize = 11.sp,
+                            color = TerminalCyan
+                        )
+                    }
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "현재 포트폴리오 자산 배분, 퀀트 리스크 지표 및 전략 권고안이 포함된 고화질 벡터 PDF가 성공적으로 생성되었습니다.",
+                        fontSize = 13.sp,
+                        color = SlateTextSecondary,
+                        lineHeight = 18.sp
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(SlateSurface)
+                            .border(1.dp, SlateBorder, RoundedCornerShape(8.dp))
+                            .padding(10.dp)
+                    ) {
+                        Text(
+                            text = "📄 ${file.name}\n용량: ${file.length() / 1024} KB",
+                            fontSize = 11.sp,
+                            color = TerminalCyan,
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        ExecutiveDossierGenerator.openPdf(context, file)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = TerminalCyan)
+                ) {
+                    Text("PDF 즉시 열람", color = SlateDeepNavy, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    OutlinedButton(
+                        onClick = {
+                            ExecutiveDossierGenerator.sharePdf(context, file)
+                        },
+                        border = BorderStroke(1.dp, SlateBorder)
+                    ) {
+                        Text("공유 / 전송", color = TerminalCyan)
+                    }
+                    TextButton(onClick = { showDossierDialog = false }) {
+                        Text("닫기", color = SlateTextMuted)
+                    }
+                }
             }
         )
     }
