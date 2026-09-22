@@ -24,9 +24,12 @@ import androidx.compose.material.icons.automirrored.filled.CompareArrows
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.AddCard
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import com.example.ui.components.*
+import com.example.ui.theme.FintechBadgeBackground
+import com.example.ui.theme.TossGray200
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -136,7 +139,7 @@ fun PortfolioScreen(
                         type = ToppingType.TIP,
                         title = "AI 포트폴리오 진단",
                         message = "하단의 'AI 진단 및 추천 비중 적용'을 누르면 성향에 맞춘 최적 비중을 원클릭으로 계산합니다.",
-                        actionText = "🚀 최적화 확인하기",
+                        actionText = "최적화 확인하기",
                         onActionClick = { showRebalanceDialog = true }
                     )
                 }
@@ -1035,7 +1038,7 @@ fun AddStockDialog(
         onDismissRequest = onDismiss,
         title = "소유 종목 추가",
         subtitle = "포트폴리오에 직접 매수한 주식을 등록합니다.",
-        iconEmoji = "📦",
+        icon = Icons.Outlined.AddCard,
         confirmText = "등록하기",
         isConfirmEnabled = isValid,
         onConfirm = {
@@ -1121,18 +1124,20 @@ fun WatchlistStockRow(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = getStockEmoji(stock.ticker, stock.name),
-                        fontSize = 18.sp
-                    )
+                val stockInitials = if (stock.ticker.all { it.isDigit() }) {
+                    stock.name.take(2)
+                } else {
+                    stock.ticker.take(2)
                 }
+                FintechTextBadge(
+                    text = stockInitials,
+                    size = 36.dp,
+                    cornerRadius = 8.dp,
+                    fontSize = 12.sp,
+                    textColor = MaterialTheme.colorScheme.primary,
+                    backgroundColor = FintechBadgeBackground,
+                    borderColor = TossGray200
+                )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
@@ -1225,7 +1230,7 @@ fun EditCashDialog(
 
             if (cashStr.isNotBlank() && parsedCash > 0) {
                 Text(
-                    text = "👉 입력 금액: ${formatter.format(parsedCash.toLong())}원",
+                    text = "입력 금액: ${formatter.format(parsedCash.toLong())}원",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,

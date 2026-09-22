@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.ui.components.FintechIconBadge
+import com.example.ui.theme.TossGray200
 
 /**
  * Modern popup modal dialog with rounded corners, icon badge header,
@@ -63,26 +65,20 @@ fun ModernModalDialog(
                     .padding(22.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Header Icon Badge
-                if (icon != null || iconEmoji != null) {
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .background(iconTint.copy(alpha = 0.12f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (icon != null) {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = null,
-                                tint = iconTint,
-                                modifier = Modifier.size(26.dp)
-                            )
-                        } else if (iconEmoji != null) {
-                            Text(text = iconEmoji, fontSize = 24.sp)
-                        }
-                    }
+                // ── 핀테크 표준 벡터 아이콘 배지 (화이트 배경 + 1px TossGray200 테두리) ──
+                val displayIcon = icon ?: if (iconEmoji != null) Icons.Outlined.NotificationsActive else null
+                if (displayIcon != null) {
+                    FintechIconBadge(
+                        icon = displayIcon,
+                        contentDescription = title,
+                        size = 56.dp,
+                        iconSize = 28.dp,
+                        cornerRadius = 16.dp,
+                        tint = iconTint,
+                        backgroundColor = Color.White,
+                        borderColor = TossGray200,
+                        elevation = 2.dp
+                    )
                     Spacer(modifier = Modifier.height(14.dp))
                 }
 
@@ -108,13 +104,10 @@ fun ModernModalDialog(
 
                 Spacer(modifier = Modifier.height(18.dp))
 
-                // Custom Body Content
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    content = content
-                )
+                // Custom Content Slot
+                content()
 
-                Spacer(modifier = Modifier.height(22.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 // Action Buttons Row
                 Row(
@@ -176,7 +169,7 @@ fun NotificationPermissionRationaleDialog(
         onDismissRequest = onDismiss,
         title = "실시간 알림 켜기",
         subtitle = "Keep & Grow에서 목표 수익률 도달, 급등락 경보 및 포트폴리오 리밸런싱 알림을 받아보세요.",
-        icon = Icons.Default.NotificationsActive,
+        icon = Icons.Outlined.NotificationsActive,
         iconTint = MaterialTheme.colorScheme.primary,
         confirmText = "알림 켜기",
         onConfirm = onConfirm,
@@ -190,7 +183,7 @@ fun NotificationPermissionRationaleDialog(
         ) {
             Column(modifier = Modifier.padding(14.dp)) {
                 Text(
-                    text = "🔔 지원하는 알림 기능",
+                    text = "지원하는 알림 기능",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface

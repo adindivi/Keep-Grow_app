@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import android.widget.Toast
 import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,11 +14,19 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
+import com.example.ui.theme.TossGray200
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -213,12 +222,15 @@ fun DiagnosisContent(
                 onClick = { viewModel.closeDetails() },
                 modifier = Modifier
                     .size(40.dp)
-                    .background(MaterialTheme.colorScheme.background, CircleShape)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(1.dp, TossGray200, CircleShape)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Close,
+                    imageVector = Icons.Outlined.Close,
                     contentDescription = "Close",
-                    tint = MaterialTheme.colorScheme.onSurface
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(20.dp)
                 )
             }
 
@@ -229,12 +241,15 @@ fun DiagnosisContent(
                     },
                     modifier = Modifier
                         .size(40.dp)
-                        .background(MaterialTheme.colorScheme.background, CircleShape)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .border(1.dp, TossGray200, CircleShape)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Star,
+                        imageVector = Icons.Outlined.Star,
                         contentDescription = "Favorite",
-                        tint = if (isFavorite) Color(0xFFFFB300) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f)
+                        tint = if (isFavorite) Color(0xFFFFB300) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
@@ -244,12 +259,15 @@ fun DiagnosisContent(
                     },
                     modifier = Modifier
                         .size(40.dp)
-                        .background(MaterialTheme.colorScheme.background, CircleShape)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .border(1.dp, TossGray200, CircleShape)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Share,
+                        imageVector = Icons.Outlined.Share,
                         contentDescription = "Share",
-                        tint = MaterialTheme.colorScheme.onSurface
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -434,19 +452,19 @@ fun DiagnosisContent(
                         DiagnosticBox(
                             title = "강점 (Strengths)",
                             content = analysis.strengths,
-                            iconSymbol = "✨",
+                            icon = Icons.AutoMirrored.Outlined.TrendingUp,
                             themeColor = MaterialTheme.colorScheme.primary
                         )
                         DiagnosticBox(
                             title = "리스크 (Risks)",
                             content = analysis.risks,
-                            iconSymbol = "⚠️",
+                            icon = Icons.Outlined.WarningAmber,
                             themeColor = Color(0xFFBA1A1A)
                         )
                         DiagnosticBox(
                             title = "전략 제안 (Recommendations)",
                             content = analysis.recommendation,
-                            iconSymbol = "💡",
+                            icon = Icons.Outlined.Lightbulb,
                             themeColor = Color(0xFF8A2BB9)
                         )
                     }
@@ -809,11 +827,13 @@ fun InteractiveTrendChart(
 fun DiagnosticBox(
     title: String,
     content: String,
-    iconSymbol: String,
+    icon: ImageVector? = null,
+    iconSymbol: String? = null,
     themeColor: Color
 ) {
     AccordionCard(
         title = title,
+        icon = icon,
         iconSymbol = iconSymbol,
         themeColor = themeColor,
         initiallyExpanded = true,

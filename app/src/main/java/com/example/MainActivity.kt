@@ -15,12 +15,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
+import com.example.ui.theme.TossGray200
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -87,7 +88,7 @@ fun MainAppLayout(viewModel: MainViewModel) {
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            viewModel.showToast("실시간 알림이 성공적으로 활성화되었습니다! 🔔")
+            viewModel.showToast("실시간 알림이 성공적으로 활성화되었습니다!")
         } else {
             viewModel.showToast("알림 권한이 거부되었습니다. 설정에서 켤 수 있습니다.")
         }
@@ -204,16 +205,16 @@ fun MainAppLayout(viewModel: MainViewModel) {
                                     Manifest.permission.POST_NOTIFICATIONS
                                 ) == PackageManager.PERMISSION_GRANTED
                                 if (isGranted) {
-                                    viewModel.showToast("실시간 주가 및 변동 알림이 켜져 있습니다. 🔔")
+                                    viewModel.showToast("실시간 주가 및 변동 알림이 켜져 있습니다.")
                                 } else {
                                     showNotificationRationale = true
                                 }
                             } else {
-                                viewModel.showToast("실시간 주가 및 변동 알림이 켜져 있습니다. 🔔")
+                                viewModel.showToast("실시간 주가 및 변동 알림이 켜져 있습니다.")
                             }
                         }) {
                             Icon(
-                                imageVector = Icons.Default.Notifications,
+                                imageVector = Icons.Outlined.Notifications,
                                 contentDescription = "notifications",
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
@@ -224,7 +225,8 @@ fun MainAppLayout(viewModel: MainViewModel) {
                                 .padding(end = 14.dp)
                                 .size(30.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                                .border(1.dp, TossGray200, CircleShape)
                                 .clickable {
                                     showAssetSettings = true
                                 },

@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -9,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
+import androidx.compose.material.icons.outlined.AutoGraph
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.RocketLaunch
 import androidx.compose.material.icons.filled.*
@@ -48,34 +50,24 @@ fun HomeScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. Welcome Header
+        // 1. Header Greeting
         item {
-            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+            Column {
                 Text(
-                    text = "당신의 투자 성향을 선택하세요",
+                    text = "환영합니다!",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    lineHeight = 32.sp
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(6.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "반가워요, ",
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "자산가님!",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "나에게 맞는 최적의 투자 성향을 선택하세요.",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
 
@@ -85,27 +77,27 @@ fun HomeScreen(
                 ProfileType.MARATHON -> {
                     ToppingCard(
                         type = ToppingType.INFO,
-                        title = "마라톤 성향 선택됨 🏃",
+                        title = "마라톤 성향 선택됨",
                         message = "12개월 기준 지속 상승 확률 60% 이상 & 급등락을 최소화한 장기 우상향 종목으로 스크리너가 자동 세팅됩니다.",
-                        actionText = "추천 종목 보러가기 👉",
+                        actionText = "추천 종목 보러가기",
                         onActionClick = { viewModel.selectTab(ScreenTab.STOCKS) }
                     )
                 }
                 ProfileType.ROCKET -> {
                     ToppingCard(
                         type = ToppingType.WARNING,
-                        title = "로켓 성향 선택됨 🚀",
+                        title = "로켓 성향 선택됨",
                         message = "3개월 기준 높은 상승 모멘텀과 고수익을 겨냥합니다. 큰 변동성이 수반되므로 분할 매수 원칙을 꼭 지켜주세요!",
-                        actionText = "고성장 스크리너 열기 👉",
+                        actionText = "고성장 스크리너 열기",
                         onActionClick = { viewModel.selectTab(ScreenTab.STOCKS) }
                     )
                 }
                 ProfileType.SLEEP -> {
                     ToppingCard(
                         type = ToppingType.TIP,
-                        title = "꿀잠 성향 선택됨 🛌",
+                        title = "꿀잠 성향 선택됨",
                         message = "일일 변동폭이 1.5% 이내로 안정적이며 꾸준히 배당과 가치가 성장하는 우량 자산 위주로 편안하게 투자합니다.",
-                        actionText = "저변동 종목 보기 👉",
+                        actionText = "저변동 종목 보기",
                         onActionClick = { viewModel.selectTab(ScreenTab.STOCKS) }
                     )
                 }
@@ -191,47 +183,47 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(180.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color(0xFF3A3D40), Color(0xFF181B1E))
+                            colors = listOf(Color(0xFF2C3036), Color(0xFF181B1E))
                         )
                     )
                     .debouncedClickable { viewModel.selectTab(ScreenTab.STOCKS) }
                     .padding(20.dp)
             ) {
-                // Background artistic sphere simulation using subtle circular overlays
-                Box(
-                    modifier = Modifier
-                        .size(150.dp)
-                        .offset(x = 180.dp, y = 80.dp)
-                        .background(Color(0xFF4c4aca).copy(alpha = 0.3f), CircleShape)
-                )
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .offset(x = 240.dp, y = (-20).dp)
-                        .background(Color(0xFF0070eb).copy(alpha = 0.25f), CircleShape)
+                // 우측 상단 바로가기 핀테크 배지
+                FintechIconBadge(
+                    icon = Icons.Outlined.AutoGraph,
+                    contentDescription = "포트폴리오 구성",
+                    size = 40.dp,
+                    iconSize = 20.dp,
+                    cornerRadius = 12.dp,
+                    tint = Color.White,
+                    backgroundColor = Color.White.copy(alpha = 0.12f),
+                    borderColor = Color.White.copy(alpha = 0.2f),
+                    elevation = 0.dp,
+                    modifier = Modifier.align(Alignment.TopEnd)
                 )
 
                 Column(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .fillMaxWidth(0.9f),
+                        .fillMaxWidth(0.85f),
                     verticalArrangement = Arrangement.Bottom
                 ) {
                     Text(
                         text = "나만의 맞춤형 포트폴리오를 구성해보세요",
-                        fontSize = 18.sp,
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = "선택하신 성향(${selectedProfile.displayName})을 바탕으로 AI가 최적의 종목을 추천합니다.",
                         fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.82f)
+                        color = Color.White.copy(alpha = 0.75f)
                     )
                 }
             }
@@ -346,12 +338,16 @@ fun MarketIndicatorCard(
     isPositive: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val changeBgColor = if (isPositive) Color(0xFFBA1A1A).copy(alpha = 0.08f) else Color(0xFF0058bc).copy(alpha = 0.08f)
+    val changeTextColor = if (isPositive) Color(0xFFBA1A1A) else Color(0xFF0058bc)
+
     Card(
         modifier = modifier.height(100.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
         ),
         shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, TossGray200),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
@@ -374,27 +370,35 @@ fun MarketIndicatorCard(
             ) {
                 Text(
                     text = value,
-                    fontSize = 18.sp,
+                    fontSize = 17.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(changeBgColor)
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
-                    Icon(
-                        imageVector = if (isPositive) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
-                        contentDescription = "trend",
-                        tint = if (isPositive) Color(0xFFBA1A1A) else Color(0xFF0058bc),
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Text(
-                        text = change,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isPositive) Color(0xFFBA1A1A) else Color(0xFF0058bc)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (isPositive) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                            contentDescription = "trend",
+                            tint = changeTextColor,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = change,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = changeTextColor,
+                            softWrap = false,
+                            maxLines = 1
+                        )
+                    }
                 }
             }
         }

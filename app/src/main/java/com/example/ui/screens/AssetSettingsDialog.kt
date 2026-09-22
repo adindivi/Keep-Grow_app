@@ -28,6 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.ui.components.FintechTextBadge
+import com.example.ui.theme.FintechBadgeBackground
+import com.example.ui.theme.TossGray200
 import com.example.ui.viewmodel.MainViewModel
 import java.text.DecimalFormat
 
@@ -165,7 +168,7 @@ fun AssetSettingsDialog(
                     if (cashInput.isNotEmpty()) {
                         val parsed = cashInput.toLongOrNull() ?: 0L
                         Text(
-                            text = "👉 한눈에 보기: ${formatter.format(parsed)}원",
+                            text = "한눈에 보기: ${formatter.format(parsed)}원",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -177,7 +180,7 @@ fun AssetSettingsDialog(
 
                     // SECTION 2: Stock Holdings Card UI
                     Text(
-                        text = "📈 내가 산 주식 카드들 (${portfolioStocks.size})",
+                        text = "보유 주식 목록 (${portfolioStocks.size})",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.primary
@@ -209,8 +212,7 @@ fun AssetSettingsDialog(
                             val currentPrice = modifiedPrices[stock.id] ?: stock.price.toInt().toString()
                             val currentQty = modifiedQuantities[stock.id] ?: stock.quantity.toString()
 
-                            // Middle school friendly name mapping & Emojis
-                            val emoji = getStockEmoji(stock.ticker, stock.name)
+                            // Middle school friendly name mapping & Subtitle
                             val tagline = when (stock.ticker.uppercase()) {
                                 "005930" -> "삼성전자 - 갤럭시 스마트폰과 가전 대표 브랜드"
                                 "000660" -> "SK하이닉스 - 고성능 AI 메모리 반도체 대표 제품"
@@ -228,7 +230,7 @@ fun AssetSettingsDialog(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                                 ),
                                 shape = RoundedCornerShape(20.dp),
-                                border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.outlineVariant)
+                                border = BorderStroke(1.dp, TossGray200)
                             ) {
                                 Column(
                                     modifier = Modifier.padding(16.dp)
@@ -238,18 +240,20 @@ fun AssetSettingsDialog(
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(36.dp)
-                                                .clip(CircleShape)
-                                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = emoji,
-                                                fontSize = 20.sp
-                                            )
+                                        val stockInitials = if (stock.ticker.all { it.isDigit() }) {
+                                            stock.name.take(2)
+                                        } else {
+                                            stock.ticker.take(2)
                                         }
+                                        FintechTextBadge(
+                                            text = stockInitials,
+                                            size = 36.dp,
+                                            cornerRadius = 10.dp,
+                                            fontSize = 12.sp,
+                                            textColor = MaterialTheme.colorScheme.primary,
+                                            backgroundColor = FintechBadgeBackground,
+                                            borderColor = TossGray200
+                                        )
                                         
                                         Spacer(modifier = Modifier.width(10.dp))
 

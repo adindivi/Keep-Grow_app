@@ -12,51 +12,60 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.FintechIconBadge
+import com.example.ui.theme.TossGray200
+import com.example.ui.theme.TossGray600
+import com.example.ui.theme.TossGray900
 
 enum class ToppingType(
     val title: String,
-    val iconEmoji: String,
+    val icon: ImageVector,
     val bgColor: Color,
     val accentColor: Color,
     val textColor: Color
 ) {
     SUCCESS(
         title = "성과 달성",
-        iconEmoji = "🏆",
-        bgColor = Color(0xFFF1F8E9),
-        accentColor = Color(0xFF4CAF50),
-        textColor = Color(0xFF2E7D32)
+        icon = Icons.Outlined.CheckCircle,
+        bgColor = Color(0xFFF0FDF4),
+        accentColor = Color(0xFF16A34A),
+        textColor = Color(0xFF15803D)
     ),
     WARNING(
         title = "변동성 주의",
-        iconEmoji = "⚠️",
-        bgColor = Color(0xFFFFF8E1),
-        accentColor = Color(0xFFFF9800),
-        textColor = Color(0xFFE65100)
+        icon = Icons.Outlined.WarningAmber,
+        bgColor = Color(0xFFFFFBEB),
+        accentColor = Color(0xFFD97706),
+        textColor = Color(0xFFB45309)
     ),
     INFO(
         title = "스마트 가이드",
-        iconEmoji = "ℹ️",
-        bgColor = Color(0xFFE3F2FD),
-        accentColor = Color(0xFF2196F3),
-        textColor = Color(0xFF1565C0)
+        icon = Icons.Outlined.Info,
+        bgColor = Color(0xFFEFF6FF),
+        accentColor = Color(0xFF2563EB),
+        textColor = Color(0xFF1D4ED8)
     ),
     TIP(
-        title = "투자 꿀팁",
-        iconEmoji = "💡",
-        bgColor = Color(0xFFF3E5F5),
-        accentColor = Color(0xFF9C27B0),
-        textColor = Color(0xFF6A1B9A)
+        title = "투자 인사이트",
+        icon = Icons.Outlined.Lightbulb,
+        bgColor = Color(0xFFFAF5FF),
+        accentColor = Color(0xFF9333EA),
+        textColor = Color(0xFF7E22CE)
     )
 }
 
@@ -85,8 +94,8 @@ fun ToppingCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .border(1.dp, type.accentColor.copy(alpha = 0.35f), RoundedCornerShape(16.dp)),
-            color = type.bgColor,
+                .border(1.dp, TossGray200, RoundedCornerShape(16.dp)),
+            color = Color.White,
             shadowElevation = 1.dp
         ) {
             Row(
@@ -95,16 +104,18 @@ fun ToppingCard(
                     .padding(14.dp),
                 verticalAlignment = Alignment.Top
             ) {
-                // Icon Badge
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(type.accentColor.copy(alpha = 0.18f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = type.iconEmoji, fontSize = 17.sp)
-                }
+                // ── 핀테크 표준 벡터 아이콘 배지 (화이트/틴트 배경 + 1px TossGray200 테두리) ──
+                FintechIconBadge(
+                    icon = type.icon,
+                    contentDescription = title,
+                    size = 36.dp,
+                    iconSize = 18.dp,
+                    cornerRadius = 10.dp,
+                    tint = type.accentColor,
+                    backgroundColor = type.bgColor,
+                    borderColor = TossGray200,
+                    elevation = 0.dp
+                )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
@@ -119,7 +130,7 @@ fun ToppingCard(
                     Text(
                         text = message,
                         fontSize = 12.sp,
-                        color = Color(0xFF263238),
+                        color = TossGray900,
                         lineHeight = 17.sp
                     )
 
@@ -144,9 +155,9 @@ fun ToppingCard(
                         modifier = Modifier.size(22.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Close,
+                            imageVector = Icons.Outlined.Close,
                             contentDescription = "닫기",
-                            tint = type.textColor.copy(alpha = 0.6f),
+                            tint = TossGray600,
                             modifier = Modifier.size(16.dp)
                         )
                     }

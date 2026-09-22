@@ -9,6 +9,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,9 +24,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.theme.TossGray200
 
 /**
  * Modern Accordion Card with smooth spring expansion animation,
@@ -36,6 +39,7 @@ fun AccordionCard(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    icon: ImageVector? = null,
     iconSymbol: String? = null,
     themeColor: Color = MaterialTheme.colorScheme.primary,
     initiallyExpanded: Boolean = false,
@@ -65,7 +69,8 @@ fun AccordionCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+        border = BorderStroke(1.dp, TossGray200),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             // Header Row (Clickable)
@@ -76,7 +81,17 @@ fun AccordionCard(
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (iconSymbol != null) {
+                if (icon != null) {
+                    FintechIconBadge(
+                        icon = icon,
+                        contentDescription = title,
+                        size = 36.dp,
+                        iconSize = 18.dp,
+                        cornerRadius = 10.dp,
+                        tint = themeColor
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                } else if (iconSymbol != null) {
                     Box(
                         modifier = Modifier
                             .size(34.dp)

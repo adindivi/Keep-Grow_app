@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import com.example.ui.components.FintechIconBadge
+import com.example.ui.components.FintechTextBadge
+import com.example.ui.theme.FintechBadgeBackground
+import com.example.ui.theme.TossGray200
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -86,11 +91,15 @@ fun ScreenerScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(
-                            text = "⚡",
-                            fontSize = 18.sp
+                        FintechIconBadge(
+                            icon = Icons.Outlined.Bolt,
+                            contentDescription = "엔진",
+                            size = 36.dp,
+                            iconSize = 20.dp,
+                            cornerRadius = 10.dp,
+                            tint = MaterialTheme.colorScheme.primary
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
                                 text = "실시간 주가 100종목 로컬 캐시 엔진",
@@ -531,19 +540,21 @@ fun StockRowItem(
                     modifier = Modifier.weight(2.2f),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Representative Icon for the company
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = getStockEmoji(stock.ticker, stock.name),
-                            fontSize = 20.sp
-                        )
+                    // Representative initial badge for the company
+                    val stockInitials = if (stock.ticker.all { it.isDigit() }) {
+                        stock.name.take(2)
+                    } else {
+                        stock.ticker.take(2)
                     }
+                    FintechTextBadge(
+                        text = stockInitials,
+                        size = 38.dp,
+                        cornerRadius = 10.dp,
+                        fontSize = 13.sp,
+                        textColor = MaterialTheme.colorScheme.primary,
+                        backgroundColor = FintechBadgeBackground,
+                        borderColor = TossGray200
+                    )
 
                     Spacer(modifier = Modifier.width(12.dp))
 
