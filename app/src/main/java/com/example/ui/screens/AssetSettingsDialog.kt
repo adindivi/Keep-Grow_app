@@ -21,7 +21,6 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
-import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -100,22 +99,19 @@ fun AssetSettingsDialog(
                     )
                 }
 
-                // 3-Tab Segmented Control (삼성 One UI / 토스 스타일)
+                // 3-Tab Segmented Control (클린 화이트 미니멀 캡슐 스타일)
                 var selectedTab by remember { mutableIntStateOf(0) }
                 val tabItems = remember(portfolioStocks.size) {
                     listOf(
                         SegmentTabItem(
-                            title = "현금 자산",
-                            icon = Icons.Outlined.AccountBalanceWallet
+                            title = "현금 자산"
                         ),
                         SegmentTabItem(
                             title = "보유 주식",
-                            icon = Icons.AutoMirrored.Outlined.ShowChart,
                             badgeText = if (portfolioStocks.isNotEmpty()) "${portfolioStocks.size}" else null
                         ),
                         SegmentTabItem(
-                            title = "투자 팁",
-                            icon = Icons.Outlined.Lightbulb
+                            title = "투자 팁"
                         )
                     )
                 }
@@ -128,44 +124,9 @@ fun AssetSettingsDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Tab Content with Fluid Spring Horizontal Slide & Crossfade Transition
-                AnimatedContent(
+                // Clean minimal tab content transition
+                Crossfade(
                     targetState = selectedTab,
-                    transitionSpec = {
-                        if (targetState > initialState) {
-                            (slideInHorizontally(
-                                animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioLowBouncy,
-                                    stiffness = Spring.StiffnessMediumLow
-                                )
-                            ) { width -> (width * 0.35f).toInt() } + fadeIn(
-                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                            )).togetherWith(
-                                slideOutHorizontally(
-                                    animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioNoBouncy,
-                                        stiffness = Spring.StiffnessMediumLow
-                                    )
-                                ) { width -> (-width * 0.35f).toInt() } + fadeOut()
-                            )
-                        } else {
-                            (slideInHorizontally(
-                                animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioLowBouncy,
-                                    stiffness = Spring.StiffnessMediumLow
-                                )
-                            ) { width -> (-width * 0.35f).toInt() } + fadeIn(
-                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                            )).togetherWith(
-                                slideOutHorizontally(
-                                    animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioNoBouncy,
-                                        stiffness = Spring.StiffnessMediumLow
-                                    )
-                                ) { width -> (width * 0.35f).toInt() } + fadeOut()
-                            )
-                        }
-                    },
                     modifier = Modifier.weight(1f),
                     label = "asset_settings_tab_content"
                 ) { tabIndex ->

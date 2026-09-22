@@ -15,11 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Bolt
-import androidx.compose.material.icons.outlined.FilterAlt
-import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -230,13 +227,13 @@ fun ScreenerScreen(
                             var filterTab by remember { mutableIntStateOf(0) }
                             val filterTabItems = remember {
                                 listOf(
-                                    SegmentTabItem(title = "성향 추천", icon = Icons.Outlined.FilterAlt),
-                                    SegmentTabItem(title = "상승 확률", icon = Icons.AutoMirrored.Outlined.TrendingUp),
-                                    SegmentTabItem(title = "변동/위험", icon = Icons.Outlined.WarningAmber)
+                                    SegmentTabItem(title = "성향 추천"),
+                                    SegmentTabItem(title = "상승 확률"),
+                                    SegmentTabItem(title = "변동/위험")
                                 )
                             }
 
-                            // 3-Tab Segmented Control
+                            // 3-Tab Segmented Control (클린 화이트 미니멀 캡슐)
                             FintechSegmentedControl(
                                 items = filterTabItems,
                                 selectedIndex = filterTab,
@@ -246,44 +243,9 @@ fun ScreenerScreen(
 
                             Spacer(modifier = Modifier.height(14.dp))
 
-                            // Tab Content with Fluid Spring Horizontal Slide
-                            AnimatedContent(
+                            // Clean minimal tab content transition
+                            Crossfade(
                                 targetState = filterTab,
-                                transitionSpec = {
-                                    if (targetState > initialState) {
-                                        (slideInHorizontally(
-                                            animationSpec = spring(
-                                                dampingRatio = Spring.DampingRatioLowBouncy,
-                                                stiffness = Spring.StiffnessMediumLow
-                                            )
-                                        ) { width -> (width * 0.35f).toInt() } + fadeIn(
-                                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                                        )).togetherWith(
-                                            slideOutHorizontally(
-                                                animationSpec = spring(
-                                                    dampingRatio = Spring.DampingRatioNoBouncy,
-                                                    stiffness = Spring.StiffnessMediumLow
-                                                )
-                                            ) { width -> (-width * 0.35f).toInt() } + fadeOut()
-                                        )
-                                    } else {
-                                        (slideInHorizontally(
-                                            animationSpec = spring(
-                                                dampingRatio = Spring.DampingRatioLowBouncy,
-                                                stiffness = Spring.StiffnessMediumLow
-                                            )
-                                        ) { width -> (-width * 0.35f).toInt() } + fadeIn(
-                                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                                        )).togetherWith(
-                                            slideOutHorizontally(
-                                                animationSpec = spring(
-                                                    dampingRatio = Spring.DampingRatioNoBouncy,
-                                                    stiffness = Spring.StiffnessMediumLow
-                                                )
-                                            ) { width -> (width * 0.35f).toInt() } + fadeOut()
-                                        )
-                                    }
-                                },
                                 label = "screener_filter_tab_content"
                             ) { tabIndex ->
                                 when (tabIndex) {
